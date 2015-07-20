@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        canvas {
+            border: 1px solid grey;
+        }
+        body{
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+
+   <img src="album.jpeg" alt="album">
+
+    <canvas width="620" height="620"></canvas>
+
+    <script>
+
+        var can = document.querySelector('canvas');
+        var context = can.getContext('2d');
+
+        var img = document.querySelector('img');
+        img.addEventListener('load', function () {
+            console.log('Image is loaded');
+
+            img.addEventListener('mousemove', function(event){
+                var mouseX = event.clientX - 100;
+                var mouseY = event.clientY - 100;
+                context.drawImage(img,mouseX,mouseY,200,200,0,0,620,620);
+                console.log('x:' + mouseX);
+                console.log('y:' + mouseY);
+            },500)
+        })
+//when hovering over the image, show a zoomed portion of the image on the canvas
+        //
+
+
+    </script>
+
+</body>
+</html>
