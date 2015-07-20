@@ -27,16 +27,24 @@
         var img = document.querySelector('img');
         img.addEventListener('load', function () {
             console.log('Image is loaded');
+            context.drawImage(img,0,0);
+            var imageData = context.getImageData(0,0,620,620);
+            var  pixelArray = imageData.data;
 
-            //when hovering over the image, show a zoomed portion of the image
-            // on the canvas
-            img.addEventListener('mousemove', function(event){
-                var mouseX = event.clientX - 100;
-                var mouseY = event.clientY - 100;
-                context.drawImage(img,mouseX,mouseY,200,200,0,0,620,620);
-                console.log('x:' + mouseX);
-                console.log('y:' + mouseY);
-            })
+            var redValue;
+            var greenValue;
+            var blueValue;
+            for(var i = 0; i < pixelArray.length; i+=4){
+
+                //pixelArray[i] = 0;
+                //pixelArray[i+1] = 0;
+
+                pixelArray[i] = redValue;
+                pixelArray[i+1] = redValue;
+                pixelArray[i+2] = redValue;
+
+            }
+            context.putImageData(imageData,0,0);
         })
 
 

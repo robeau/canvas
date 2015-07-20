@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        canvas {
+            border: 1px solid grey;
+        }
+        body{
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+
+<canvas width="620" height="620"></canvas>
+
+<script>
+
+    var can = document.querySelector('canvas');
+    var context = can.getContext('2d');
+
+    context.beginPath();
+    can.addEventListener('click', function (event) {
+        //context.fillText('o',event.clientX - 3,event.clientY + 2);
+        context.lineTo(event.clientX,event.clientY);
+        context.stroke();
+    });
+
+
+
+
+</script>
+
+</body>
+</html>

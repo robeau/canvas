@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<input type="range" min="0" max="255" step="5"><br/>
+    <img src="album.jpeg" alt="album">
+
+    <canvas width="620" height="620"></canvas>
+
+    <script>
+
+        var filters = {
+            grayscale: function(pixelArray){
+                for(var i = 0; i < pixelArray.length; i+=4){
+
+
+                    //pixelArray[i] = 0;
+                    //pixelArray[i+1] = 0;
+
+                    pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = gr(i);
+                }
+
+                function gr(i){
+                    return pixelArray[i]*.21 + pixelArray[i+1]*.72 +  pixelArray[i+2]*.07;
+                }
+            },
+            threshold: function(pixelArray, threshold_value){
+                for(var i = 0; i < pixelArray.length; i+=4){
+                    if(i === 0){
+                        console.log('px: ' + pixelArray[0]);
+                    }
+                    if (gr(i) > threshold_value){
+                        pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = 255;
+                    }
+                    else{
+                        pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = 0;
+                    }
+                }
+
+                function gr(i){
+                    return pixelArray[i]*.21 + pixelArray[i+1]*.72 +  pixelArray[i+2]*.07;
+                }
+            },
+            focus_color: function(pixelArray){
+
+            }
+        };
+
+        var can = document.querySelector('canvas');
+        var context = can.getContext('2d');
+        var ranger = document.querySelector('input[type="range"]');
+
+        var img = document.querySelector('img');
+        img.addEventListener('load', function () {
+            console.log('Image is loaded');
+            context.drawImage(img,0,0);
+            var imageData = context.getImageData(0,0,620,620);
+            var  pixelArray = imageData.data;
+
+            ranger.addEventListener('change', function(){
+                context.clearRect(0, 0, 620, 620);
+
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,620,620);
+                pixelArray = imageData.data;
+                console.log(this.value);
+                filters.threshold(pixelArray, this.value);
+                context.putImageData(imageData,0,0);
+            });
+        })
+
+
+
+    </script>
+</body>
+</html>
