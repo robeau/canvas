@@ -5,18 +5,20 @@
     <title>Title</title>
 </head>
 <body>
-    <img src="billiards.jpg" alt="billiards">
-
-    <canvas  height="300" width="450"></canvas>
-    <br/>
-    <button id="button0">Reset</button>
-    <button id="button1">Blue Tint</button>
-    <button id="button2">Greyscale</button>
-    <button id="button3">Focus Blue</button>
-    <button id="button4">Brighten</button>
-    <button id="button5">Old Timey</button>
-    <input type="range" min="0" max="255" step="5">
+        <img src="billiards.jpg" alt="billiards">
+        <canvas  height="300" width="450"></canvas><br />
+        <button id="button0">Reset</button>
+        <button id="button6">Undo Last</button>
+        <button id="button1">Blue Tint</button>
+        <button id="button2">Greyscale</button>
+        <button id="button3">Focus Green</button>
+        <button id="button4">Brighten</button>
+        <button id="button5">Old Timey</button>
+        <input type="range" min="0" max="255" step="5">
+        <label />
     <script>
+        var thresholdValue = document.querySelector('body > label');
+        thresholdValue.innerHTML = 'Slide to set  threshold';
 
         var filters = {
             blueTint: function(pixelArray){
@@ -49,43 +51,65 @@
                 }
             },
             focus_color: function(pixelArray,red,green,blue){
-                var hue;
+                var targetHue = hue(red,green,blue);
                 for(var i = 0; i < pixelArray.length; i+=4){
-                    if (pixelArray[i] > red - 50 && pixelArray[i] < red + 50 && pixelArray[i+1] > green - 50 && pixelArray[i+1] < green + 50 && pixelArray[i+2] > blue - 50 && pixelArray[i+2] < blue + 50){
+                    var currentHue = hue(pixelArray[i],pixelArray[i+1],pixelArray[i+2]);
+
+                    if (currentHue >= targetHue - 50 && currentHue <= targetHue + 50){
                     }
-                    else{
-                        pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = gr(i);
-                    }
+                    else pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = gr(i);
                 }
 
                 function gr(i){
                     return pixelArray[i]*.21 + pixelArray[i+1]*.72 +  pixelArray[i+2]*.07;
                 }
 
-                function hue(i){
+                function hue(r,g,b){
+                    r = r/255;
+                    g = g/255;
+                    b = b/255;
                     var maxValue;
                     var minValue;
                     // first find which rgb color is strongest
-                    if (pixelArray[i] > pixelArray[i+1]){
-                        if (pixelArray[i] > pixelArray[i+2]){
+                    if (r > g){
+                        if (r > b){
                             maxValue = 1;
-                            if (pixelArray[i+1] < pixelArray[i+2]){
-                                minValue = 2
+                            if (g < b){
+                                minValue = g;
                             }
+                            else minValue = b;
                         }
-                        else if (pixelArray[i+1] > pixelArray[i+2]){
+                        else if (g > b){
                             maxValue = 2;
+                            if (r < b){
+                                minValue = r;
+                                if (g < b){
+                                    minValue = g;
+                                }
+                                else minValue = b;
+                            }
+                            else minValue = b;
                         }
                     }
-                    else if (pixelArray[i+1] > pixelArray[i+2]){
+                    else if (g > b){
                         maxValue = 2;
+                        if (r < b){
+                            minValue = r;
+                        }
+                        else minValue = b;
                     }
-                    else maxValue = 3;
-
+                    else{
+                        maxValue = 3;
+                        minValue = r;
+                    }
                     //now find the hue
                     if (maxValue === 1){
-                       // hue = (pixelArray[i+1] - pixelArray[i+2])/
+                        return Math.round((g - b)/(r - minValue)*60);
                     }
+                    else if (maxValue === 2){
+                        return Math.round((2 + (b - r)/(g - minValue))*60);
+                    }
+                    else return Math.round((4 + (r - g)/(b - minValue))*60);
                 }
             },
             brighten: function(pixelArray){
@@ -123,6 +147,7 @@
         var can = document.querySelector('canvas');
         var context = can.getContext('2d');
         var resetter = document.getElementById('button0');
+        var undoer = document.getElementById('button6');
         var bluer = document.getElementById('button1');
         var grayer = document.getElementById('button2');
         var focusser = document.getElementById('button3');
@@ -136,71 +161,94 @@
             context.drawImage(img,0,0);
             var imageData = context.getImageData(0,0,300,450);
             var  pixelArray = imageData.data;
+            context.putImageData(imageData,0,0);
+
+            var tempArray = context.getImageData(0,0,300,450);
 
             //reset button
             resetter.addEventListener('click', function(){
+                thresholdValue.innerHTML = 'Slide to set  threshold';
                 context.drawImage(img,0,0);
-                imageData = context.getImageData(0,0,300,450);
+                imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
+            });
+
+            //undo button
+            undoer.addEventListener('click', function(){
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                context.putImageData(tempArray,0,0);
+                tempArray = imageData;
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                undoer.innerHTML = 'Redo Last';
             });
 
             //blue tint button
             bluer.addEventListener('click', function(){
-                context.drawImage(img,0,0);
+                tempArray = imageData;
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
                 filters.blueTint(pixelArray);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
 
             //greyscale button
             grayer.addEventListener('click', function(){
-                context.drawImage(img,0,0);
+                tempArray = imageData;
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
                 filters.grayscale(pixelArray);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
 
-            //focus blue button
+            //focus green button
             focusser.addEventListener('click', function(){
-                context.drawImage(img,0,0);
+                tempArray = imageData;
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
-                filters.focus_color(pixelArray,0,0,164);
+                filters.focus_color(pixelArray,2,74,71);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
 
             //brighten button
             brighter.addEventListener('click', function(){
-                context.drawImage(img,0,0);
+                tempArray = imageData;
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
-                filters.brighten(pixelArray);
+                filters.brighten(pixelArray,450,300);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
 
             //old timey button
             older.addEventListener('click', function(){
-                context.drawImage(img,0,0);
+                tempArray = imageData;
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
                 filters.old_timey(pixelArray, 450, 300);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
 
             // threshold slider
             ranger.addEventListener('input', function(){
+                tempArray = imageData;
+                thresholdValue.innerHTML = this.value;
+                console.log(this.value);
                 context.drawImage(img,0,0);
                 imageData = context.getImageData(0,0,450,300);
                 pixelArray = imageData.data;
                 filters.threshold(pixelArray, this.value);
                 context.putImageData(imageData,0,0);
+                undoer.innerHTML = 'Undo Last';
             });
         })
-
-
 
     </script>
 </body>
