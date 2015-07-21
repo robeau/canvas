@@ -5,22 +5,28 @@
     <title>Title</title>
 </head>
 <body>
+    <img src="billiards.jpg" alt="billiards">
 
-<input type="range" min="0" max="255" step="5"><br/>
-    <img src="album.jpeg" alt="album">
-
-    <canvas width="620" height="620"></canvas>
-
+    <canvas  height="300" width="450"></canvas>
+    <br/>
+    <button id="button0">Reset</button>
+    <button id="button1">Blue Tint</button>
+    <button id="button2">Greyscale</button>
+    <button id="button3">Focus Blue</button>
+    <button id="button4">Brighten</button>
+    <button id="button5">Old Timey</button>
+    <input type="range" min="0" max="255" step="5">
     <script>
 
         var filters = {
+            blueTint: function(pixelArray){
+                for(var i = 0; i < pixelArray.length; i+=4){
+                    pixelArray[i] = 0;
+                    pixelArray[i+1] = 0;
+                }
+            },
             grayscale: function(pixelArray){
                 for(var i = 0; i < pixelArray.length; i+=4){
-
-
-                    //pixelArray[i] = 0;
-                    //pixelArray[i+1] = 0;
-
                     pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = gr(i);
                 }
 
@@ -30,9 +36,6 @@
             },
             threshold: function(pixelArray, threshold_value){
                 for(var i = 0; i < pixelArray.length; i+=4){
-                    if(i === 0){
-                        console.log('px: ' + pixelArray[0]);
-                    }
                     if (gr(i) > threshold_value){
                         pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = 255;
                     }
@@ -45,29 +48,153 @@
                     return pixelArray[i]*.21 + pixelArray[i+1]*.72 +  pixelArray[i+2]*.07;
                 }
             },
-            focus_color: function(pixelArray){
+            focus_color: function(pixelArray,red,green,blue){
+                var hue;
+                for(var i = 0; i < pixelArray.length; i+=4){
+                    if (pixelArray[i] > red - 50 && pixelArray[i] < red + 50 && pixelArray[i+1] > green - 50 && pixelArray[i+1] < green + 50 && pixelArray[i+2] > blue - 50 && pixelArray[i+2] < blue + 50){
+                    }
+                    else{
+                        pixelArray[i] = pixelArray[i+1] = pixelArray[i+2] = gr(i);
+                    }
+                }
+
+                function gr(i){
+                    return pixelArray[i]*.21 + pixelArray[i+1]*.72 +  pixelArray[i+2]*.07;
+                }
+
+                function hue(i){
+                    var maxValue;
+                    var minValue;
+                    // first find which rgb color is strongest
+                    if (pixelArray[i] > pixelArray[i+1]){
+                        if (pixelArray[i] > pixelArray[i+2]){
+                            maxValue = 1;
+                            if (pixelArray[i+1] < pixelArray[i+2]){
+                                minValue = 2
+                            }
+                        }
+                        else if (pixelArray[i+1] > pixelArray[i+2]){
+                            maxValue = 2;
+                        }
+                    }
+                    else if (pixelArray[i+1] > pixelArray[i+2]){
+                        maxValue = 2;
+                    }
+                    else maxValue = 3;
+
+                    //now find the hue
+                    if (maxValue === 1){
+                       // hue = (pixelArray[i+1] - pixelArray[i+2])/
+                    }
+                }
+            },
+            brighten: function(pixelArray){
+                for(var i = 0; i < pixelArray.length; i++){
+                    pixelArray[i]+=20;
+                }
+            },
+            old_timey: function(pixelArray, width, height){
+                var pixelPosition;
+                var pixelRow;
+                var pixelCol;
+                var centerX = width/2;
+                var centerY = height/2;
+                var distX;
+                var distY;
+                var distFromCenter;
+                for(var i = 0; i < pixelArray.length; i+=4){
+
+                    pixelPosition = i/4;
+                    pixelRow = pixelPosition/width;
+                    pixelCol = pixelPosition%width;
+                    distX = Math.abs(centerX - pixelCol);
+                    distY = Math.abs(centerY - pixelRow);
+                    distFromCenter = Math.sqrt(Math.pow(distX,2) + Math.pow(distY,2));
+                    if(distFromCenter > 130){
+                        pixelArray[i]+=(distFromCenter - 130);
+                        pixelArray[i+1]+=(distFromCenter - 130);
+                        pixelArray[i+2]+=(distFromCenter - 130);
+                    }
+                }
 
             }
         };
 
         var can = document.querySelector('canvas');
         var context = can.getContext('2d');
+        var resetter = document.getElementById('button0');
+        var bluer = document.getElementById('button1');
+        var grayer = document.getElementById('button2');
+        var focusser = document.getElementById('button3');
+        var brighter = document.getElementById('button4');
+        var older = document.getElementById('button5');
         var ranger = document.querySelector('input[type="range"]');
 
         var img = document.querySelector('img');
         img.addEventListener('load', function () {
             console.log('Image is loaded');
             context.drawImage(img,0,0);
-            var imageData = context.getImageData(0,0,620,620);
+            var imageData = context.getImageData(0,0,300,450);
             var  pixelArray = imageData.data;
 
-            ranger.addEventListener('change', function(){
-                context.clearRect(0, 0, 620, 620);
-
+            //reset button
+            resetter.addEventListener('click', function(){
                 context.drawImage(img,0,0);
-                imageData = context.getImageData(0,0,620,620);
+                imageData = context.getImageData(0,0,300,450);
                 pixelArray = imageData.data;
-                console.log(this.value);
+                context.putImageData(imageData,0,0);
+            });
+
+            //blue tint button
+            bluer.addEventListener('click', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                filters.blueTint(pixelArray);
+                context.putImageData(imageData,0,0);
+            });
+
+            //greyscale button
+            grayer.addEventListener('click', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                filters.grayscale(pixelArray);
+                context.putImageData(imageData,0,0);
+            });
+
+            //focus blue button
+            focusser.addEventListener('click', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                filters.focus_color(pixelArray,0,0,164);
+                context.putImageData(imageData,0,0);
+            });
+
+            //brighten button
+            brighter.addEventListener('click', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                filters.brighten(pixelArray);
+                context.putImageData(imageData,0,0);
+            });
+
+            //old timey button
+            older.addEventListener('click', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
+                filters.old_timey(pixelArray, 450, 300);
+                context.putImageData(imageData,0,0);
+            });
+
+            // threshold slider
+            ranger.addEventListener('input', function(){
+                context.drawImage(img,0,0);
+                imageData = context.getImageData(0,0,450,300);
+                pixelArray = imageData.data;
                 filters.threshold(pixelArray, this.value);
                 context.putImageData(imageData,0,0);
             });
