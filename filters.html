@@ -52,6 +52,7 @@
             },
             focus_color: function(pixelArray,red,green,blue){
                 var targetHue = hue(red,green,blue);
+                console.log('target hue: ' + targetHue);
                 for(var i = 0; i < pixelArray.length; i+=4){
                     var currentHue = hue(pixelArray[i],pixelArray[i+1],pixelArray[i+2]);
 
